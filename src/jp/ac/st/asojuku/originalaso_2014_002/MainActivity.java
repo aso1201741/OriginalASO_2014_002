@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 
 public class MainActivity extends Activity implements View.OnClickListener{
 
@@ -27,15 +28,22 @@ public class MainActivity extends Activity implements View.OnClickListener{
 		switch(v.getId()){
 		case R.id.main_btn1:
 			vIntent = new Intent(this,MaintenanceActivity.class);
+			startActivity(vIntent);
 			break;
 		case R.id.main_btn2:
-
+			EditText et = (EditText)findViewById(R.id.main_edt1);
+			String txt = et.getText().toString();
+			MySQLiteOpenHelper da = new MySQLiteOpenHelper(this);
+			android.database.sqlite.SQLiteDatabase db = da.getReadableDatabase();
+			String sql = "INSERT INTO Hitokoto(phrase) VALUES('" + txt + "')";
+			db.execSQL(sql);
+			db.close();
 			break;
 		case R.id.main_btn3:
 			vIntent = new Intent(this,HitokotoActivity.class);
+			startActivity(vIntent);
 			break;
 		}
-		startActivity(vIntent);
 	}
 
 }
