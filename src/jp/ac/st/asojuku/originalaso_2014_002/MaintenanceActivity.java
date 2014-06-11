@@ -21,13 +21,10 @@ public class MaintenanceActivity extends MainActivity implements View.OnClickLis
 
 		String sql = "SELECT * FROM Hitokoto";
 		Cursor cr = db.rawQuery(sql,null);
-		ArrayAdapter<String[]> ad = new ArrayAdapter<String[]>(this, R.layout.rowdata);
+		ArrayAdapter<String> ad = new ArrayAdapter<String>(this, R.layout.rowdata);
 		boolean eof = cr.moveToFirst();
 		while(eof){
-			String[] x = new String[2];
-			x[0] = cr.getString(0);
-			x[1] = cr.getString(1);
-			ad.add(x);
+			ad.add(cr.getString(1));
 			eof = cr.moveToNext();
 		}
 		cr.close();
@@ -45,7 +42,6 @@ public class MaintenanceActivity extends MainActivity implements View.OnClickLis
 			finish();
 			break;
 		case R.id.maintenance_btn2:
-
 			break;
 		}
 	}
