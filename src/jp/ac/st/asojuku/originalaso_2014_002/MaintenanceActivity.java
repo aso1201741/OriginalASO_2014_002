@@ -1,46 +1,44 @@
 package jp.ac.st.asojuku.originalaso_2014_002;
 
-import android.database.Cursor;
+import android.app.Activity;
+import android.database.sqlite.SQLiteCursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
+import android.support.v4.widget.SimpleCursorAdapter;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
-public class MaintenanceActivity extends MainActivity implements View.OnClickListener{
+public class MaintenanceActivity extends Activity implements View.OnClickListener, AdapterView.OnItemClickListener{
 
-	int t;
+	SQLiteDatabase sdb = null;
+
+	MySQLiteOpenHelper helper = null;
+
+	int selectedID = -1;
+	int lastPosition = -1;
 
 	protected void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.maintenance_activity);
+	}
+
+	@Override
+	protected void onResume() {
+		// TODO 自動生成されたメソッド・スタブ
+		super.onResume();
 		Button btn1 = (Button)findViewById(R.id.maintenance_btn1);
 		Button btn2 = (Button)findViewById(R.id.maintenance_btn2);
+		ListView vlistview = (ListView)findViewById(R.id.maintenance_list);
 		btn1.setOnClickListener(this);
 		btn2.setOnClickListener(this);
-		MySQLiteOpenHelper da = new MySQLiteOpenHelper(this);
-		android.database.sqlite.SQLiteDatabase db = da.getReadableDatabase();
-
-
-		String sql = "SELECT * FROM Hitokoto";
-		Cursor cr = db.rawQuery(sql,null);
-		ArrayAdapter<String> ad = new ArrayAdapter<String>(this, R.layout.rowdata);
-		boolean eof = cr.moveToFirst();
-		while(eof){
-			ad.add(cr.getString(1));
-			eof = cr.moveToNext();
-		}
-		cr.close();
-		db.close();
-		ListView vlistview = (ListView)findViewById(R.id.maintenance_list);
+		vlistview.setOnItemClickListener(this);
 		vlistview.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-		vlistview.setAdapter(ad);
-		vlistview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id){
-			t = position;
-		}
-		});
+		this.setDBValuetoList(vlistview);
 	}
 
 	@Override
@@ -51,29 +49,44 @@ public class MaintenanceActivity extends MainActivity implements View.OnClickLis
 			finish();
 			break;
 		case R.id.maintenance_btn2:
-			ListView listview = (ListView)findViewById(R.id.maintenance_list);
-			String item = listview.getItemAtPosition(t).toString();
-			System.out.println(item);
-			MySQLiteOpenHelper da = new MySQLiteOpenHelper(this);
-			android.database.sqlite.SQLiteDatabase db = da.getReadableDatabase();
-			String sql = "DELETE FROM Hitokoto WHERE phrase = '" + item + "'";
-			db.execSQL(sql);
-			sql = "SELECT * FROM Hitokoto";
-			Cursor cr = db.rawQuery(sql,null);
-			ArrayAdapter<String> ad = new ArrayAdapter<String>(this, R.layout.rowdata);
-			boolean eof = cr.moveToFirst();
-			while(eof){
-				ad.add(cr.getString(1));
-				eof = cr.moveToNext();
-			}
-			cr.close();
-			db.close();
+			helper.deleteHitokoto(sdb, selectedID);
 			ListView vlistview = (ListView)findViewById(R.id.maintenance_list);
-			vlistview.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-			vlistview.setAdapter(ad);
-
+			this.setDBValuetoList(vlistview);
 			break;
 		}
+	}
+
+	@Override
+	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+		// TODO 自動生成されたメソッド・スタブ
+		selectedID = (int)id;
+		Toast.makeText(getApplicationContext(), String.valueOf(selectedID), Toast.LENGTH_LONG).show();
+	}
+
+	private void setDBValuetoList(ListView lstHitokoto){
+
+		SQLiteCursor cursor = null;
+
+		if(sdb == null){
+			helper = new MySQLiteOpenHelper(getApplicationContext());
+		}
+		try{
+			sdb = helper.getWritableDatabase();
+		}catch(SQLiteException e){
+			Log.e("ERROR", e.toString());
+		}
+
+		cursor = this.helper.selectHitokotoList(sdb);
+
+		int db_layout = android.R.layout.simple_list_item_activated_1;
+
+		String[]from = {"phrase"};
+
+		int[] to = new int[]{android.R.id.text1};
+
+		SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, db_layout, cursor, from, to, 0);
+
+		lstHitokoto.setAdapter(adapter);
 	}
 
 }
