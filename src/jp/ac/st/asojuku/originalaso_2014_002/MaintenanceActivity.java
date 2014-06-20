@@ -49,9 +49,16 @@ public class MaintenanceActivity extends Activity implements View.OnClickListene
 			finish();
 			break;
 		case R.id.maintenance_btn2:
-			helper.deleteHitokoto(sdb, selectedID);
-			ListView vlistview = (ListView)findViewById(R.id.maintenance_list);
-			this.setDBValuetoList(vlistview);
+			if(this.selectedID != -1){
+				this.deleteFromHitokoto(this.selectedID);
+				ListView vlistview = (ListView)findViewById(R.id.maintenance_list);
+				this.setDBValuetoList(vlistview);
+				this.selectedID = -1;
+				this.lastPosition = -1;
+			}else{
+				Toast.makeText(MaintenanceActivity.this, "削除する行を選んでください", Toast.LENGTH_SHORT).show();
+			}
+
 			break;
 		}
 	}
@@ -59,8 +66,15 @@ public class MaintenanceActivity extends Activity implements View.OnClickListene
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 		// TODO 自動生成されたメソッド・スタブ
-		selectedID = (int)id;
-		Toast.makeText(getApplicationContext(), String.valueOf(selectedID), Toast.LENGTH_LONG).show();
+		if(this.selectedID != -1){
+			parent.getChildAt(this.lastPosition).setBackgroundColor(0);
+		}
+		view.setBackgroundColor(android.graphics.Color.LTGRAY);
+		SQLiteCursor cursor = (SQLiteCursor)parent.getItemAtPosition(position);
+
+		this.selectedID = cursor.getInt(cursor.getColumnIndex("_id"));
+		this.lastPosition = position;
+
 	}
 
 	private void setDBValuetoList(ListView lstHitokoto){
@@ -87,6 +101,18 @@ public class MaintenanceActivity extends Activity implements View.OnClickListene
 		SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, db_layout, cursor, from, to, 0);
 
 		lstHitokoto.setAdapter(adapter);
+	}
+
+	private void deleteFromHitokoto(int id){
+		if(sdb == null){
+			helper = new MySQLiteOpenHelper(getApplicationContext());
+		}
+		try{
+			sdb = helper.getWritableDatabase();
+		}catch(SQLiteException e){
+			Log.e("ERROR", e.toString());
+		}
+		this.helper.deleteHitokoto(sdb, id);
 	}
 
 }
